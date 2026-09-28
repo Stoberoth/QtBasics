@@ -14,11 +14,17 @@ qt_standard_project_setup()
 # création de la cible executable
 qt_add_executable(appQt_basics src/main.cpp)
 
+target_include_directories(appQt_basics PRIVATE include)
+
 # compile les fichiers QML
 qt_add_qml_module(appQt_basics
     URI Qt_basics
     VERSION 1.0
     QML_FILES qml/Main.qml
+    SOURCES include/DashboardController.h src/DashboardController.cpp
+    include/TaskListModel.h src/TaskListModel.cpp
+    include/TaskFilterProxyModel.h src/TaskFilterProxyModel.cpp
 )
+
 
 target_link_libraries(appQt_basics PRIVATE Qt6::Core Qt6::Quick Qt6::Qml)
