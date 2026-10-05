@@ -12,7 +12,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml)
 qt_standard_project_setup()
 
 # création de la cible executable
-qt_add_executable(appQt_basics src/main.cpp)
+qt_add_executable(appQt_basics include/ImportWorker.h src/ImportWorker.cpp src/main.cpp )
 
 target_include_directories(appQt_basics PRIVATE include)
 

@@ -191,4 +191,15 @@ Window
         text:taskModel.importMessage;
         color: "#f38ba8"
     }
+    Button
+    {
+        text:"Import big file"
+        onClicked: taskModel.importButton()
+    }
+    ProgressBar
+    {
+        from:0
+        to: 100
+        value: taskModel.importProgress
+    }
 }

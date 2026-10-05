@@ -11,6 +11,8 @@
 #include <QDir>
 #include <QFile>
 
+#include "ImportWorker.h"
+
 struct Task
 {
     QString title;
@@ -42,6 +44,7 @@ class TaskListModel: public QAbstractListModel
 
 public:
     explicit TaskListModel(QObject *parent = nullptr);
+    ~TaskListModel();
 
     enum TaskRoles
     {
@@ -54,23 +57,41 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     Q_PROPERTY(QString importMessage READ importMessage NOTIFY importMessageChanged)
+    Q_PROPERTY(int importProgress READ importProgress NOTIFY importProgressChanged)
 
     Q_INVOKABLE void addTask(const QString &title);
     Q_INVOKABLE void removeTask(int index);
     Q_INVOKABLE void toggleTask(int index);
     Q_INVOKABLE void moveTask(int from, int to);
     Q_INVOKABLE void importFromFile(const QString &path);
+    Q_INVOKABLE void importButton();
 
     QString importMessage();
     void setImportMessage(const QString &message);
 
+    int importProgress();
+    void setImportProgress(int importProgress);
+
 signals:
     void importMessageChanged();
+    void importedRequested(const QString &path);
+    void importProgressChanged();
+    void importBigFile(int count);
+
 private:
     std::vector<Task> m_task;
     QString m_message;
+    int m_importProgress = 0;
+
+    bool m_workerBusy = false;
+
+    ImportWorker *m_worker;
+    QThread *m_thread;
 
     QString getStorageFilePath() const;
     void saveToFile() const;
     void loadFromFile();
+
+    void applyImport(const QJsonArray &tasks);
+    void onImportFailed(const QString &message);
 };

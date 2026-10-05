@@ -1,15 +1,32 @@
 #include "TaskListModel.h"
+#include "ImportWorker.h"
 #include <QByteArray>
 #include <algorithm>
+#include <QThread>
+#include <iterator>
 
 TaskListModel::TaskListModel(QObject *parent) : QAbstractListModel(parent)
 {
+    m_worker = new ImportWorker();
+    m_thread = new QThread(this);
+    m_worker->moveToThread(m_thread);
+
+
+    connect(this, &TaskListModel::importedRequested, m_worker, &ImportWorker::importFile);
+    connect(m_worker, &ImportWorker::imported, this, &TaskListModel::applyImport);
+    connect(m_worker, &ImportWorker::failed, this, &TaskListModel::onImportFailed);
+    connect(this, &TaskListModel::importBigFile, m_worker, &ImportWorker::generateTasks);
+    connect(m_worker, &ImportWorker::progress, this, &TaskListModel::setImportProgress);
+    m_thread->start();
     loadFromFile();
     if(m_task.empty())
-    {
-        m_task = {{"Pas de data", false}};
-        saveToFile();
-    }
+        setImportMessage("Pas de données trouvées");
+}
+TaskListModel::~TaskListModel()
+{
+    m_thread->quit();
+    m_thread->wait();
+    delete m_worker;
 }
 
 QString TaskListModel::importMessage()
@@ -134,39 +151,20 @@ void TaskListModel::moveTask(int from, int to)
 
 void TaskListModel::importFromFile(const QString &path)
 {
+    if(m_workerBusy)
+    {
+        setImportMessage("Un autre import est déjà en cours");
+        return;
+    }
     const QString localPath = QUrl(path).toLocalFile();
     if(localPath.isEmpty())
     {
         setImportMessage("No file to import");
         return;
     }
-    QFile jsonFile(localPath);
-    if(!jsonFile.open(QIODevice::ReadOnly|QIODevice::Text))
-    {
-        setImportMessage("No file to import");
-        return;
-    }
-    QByteArray data = jsonFile.readAll();
-    QJsonDocument taskJsonDocument = QJsonDocument::fromJson(data);
-    if(!taskJsonDocument.isArray())
-    {
-        setImportMessage("File not imported : Wrong format");
-        return;
-    }
-    QJsonArray array = taskJsonDocument.array();
-    if(array.size() == 0)
-    {
-        setImportMessage("File not imported : Empty Array");
-        return;
-    }
-    beginInsertRows(QModelIndex(),m_task.size(), m_task.size()+array.size()-1);
-    for(int i = 0; i < array.size(); i++)
-    {
-        m_task.push_back(Task::fromJson(array.at(i).toObject()));
-    }
-    endInsertRows();
-    setImportMessage("File imported with success");
-    saveToFile();
+    setImportMessage("Import en cours ....");
+    m_workerBusy = true;
+    emit importedRequested(localPath);
 }
 
 
@@ -212,4 +210,46 @@ void TaskListModel::loadFromFile()
         }
         endResetModel();
     }
+}
+
+void TaskListModel::applyImport(const QJsonArray &tasks)
+{
+    m_workerBusy = false;
+    if(tasks.empty()) {
+        setImportMessage("Json Array empty");
+        return;
+    }
+
+    beginInsertRows(QModelIndex(), m_task.size(), m_task.size()+tasks.size()-1);
+    for(int i = 0; i < tasks.size(); i++)
+    {
+        m_task.push_back(Task::fromJson(tasks.at(i).toObject()));
+    }
+    endInsertRows();
+    setImportMessage("Import réussi");
+    saveToFile();
+}
+
+void TaskListModel::onImportFailed(const QString &message)
+{
+    m_workerBusy = false;
+    setImportMessage(message);
+}
+
+int TaskListModel::importProgress()
+{
+    return m_importProgress;
+}
+
+void TaskListModel::setImportProgress(int importProgress)
+{
+    m_importProgress = importProgress;
+    emit importProgressChanged();
+}
+
+void TaskListModel::importButton()
+{
+    if(m_workerBusy) return;
+    m_workerBusy = true;
+    emit(importBigFile(50000));
 }
