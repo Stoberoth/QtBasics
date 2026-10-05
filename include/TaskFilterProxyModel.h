@@ -25,6 +25,8 @@ public:
 
     Q_INVOKABLE void toggleTask(int proxyRow);
     Q_INVOKABLE void removeTask(int proxyRow);
+    Q_INVOKABLE void moveTask(int proxyRow, int proxyRowDest);
+    Q_INVOKABLE void importFromFile(const QString &path);
 
 signals:
     void filterModeChanged();

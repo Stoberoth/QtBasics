@@ -2,7 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import Qt_basics
 
-Window{
+Window
+{
     width:640
     height: 480
     visible:true
@@ -68,7 +69,6 @@ Window{
                     newTaskField.text = ""
                 }
             }
-
         }
         Row
         {
@@ -104,30 +104,91 @@ Window{
         }
         ListView
         {
-            model: proxyModel
+            id: taskListView
+            model: proxyModel.filterMode === TaskFilterProxyModel.All ? taskModel : proxyModel
+
             width: parent.width
             height: 200
             clip: true
-            delegate: Row
+            delegate: TaskDelegate
             {
-                spacing: 8
-                CheckBox
+                listView: taskListView
+                reorderEnabled: proxyModel.filterMode === TaskFilterProxyModel.All
+                width: taskListView.width
+                onTaskToggled : proxyModel.toggleTask(model.index)
+                onTaskRemoved : proxyModel.removeTask(model.index)
+                onTaskReordered: (toIndex) => proxyModel.moveTask(index, toIndex)
+            }
+            add: Transition
+            {
+                NumberAnimation
                 {
-                    checked: model.completed
-                    onToggled: proxyModel.toggleTask(model.index)
+                    properties: "x"
+                    from: -taskListView.width
+                    to: 0
+                    duration: 300
+                    easing.type: Easing.OutQuad
                 }
-                Text
+                NumberAnimation
                 {
-                    text: model.title
-                    color: model.completed ? "#6c7086" : "#cdd6f4"
-                    font.strikeout : model.completed
+                    properties: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 300
                 }
-                Button
+            }
+            remove: Transition
+            {
+                NumberAnimation
                 {
-                    text:"x"
-                    onClicked: proxyModel.removeTask(model.index)
+                    properties: "opacity"
+                    to: 0
+                    duration: 350
+                }
+                NumberAnimation
+                {
+                    properties: "scale"
+                    to: 0.5
+                    duration: 250
+                }
+            }
+            displaced: Transition
+            {
+                NumberAnimation
+                {
+                    properties: "y"
+                    duration: 250
+                    easing.type: Easing.OutCubic
+                }
+            }
+            move: Transition {
+                NumberAnimation {
+                    properties: "y"
+                    duration: 250
+                    easing.type: Easing.OutCubic
+                }
+            }
+            moveDisplaced: Transition {
+                NumberAnimation {
+                    properties: "y"
+                    duration: 250
+                    easing.type: Easing.OutCubic
                 }
             }
         }
+    }
+    DropArea
+    {
+        anchors.fill: parent
+        onDropped: (drop) => {
+            if(drop.hasUrls)
+                taskModel.importFromFile(drop.urls[0])
+            drop.acceptProposedAction()
+        }
+    }
+    Text
+    {
+        text:taskModel.importMessage;
+        color: "#f38ba8"
     }
 }

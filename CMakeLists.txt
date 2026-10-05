@@ -20,7 +20,7 @@ target_include_directories(appQt_basics PRIVATE include)
 qt_add_qml_module(appQt_basics
     URI Qt_basics
     VERSION 1.0
-    QML_FILES qml/Main.qml
+    QML_FILES qml/Main.qml qml/TaskDelegate.qml
     SOURCES include/DashboardController.h src/DashboardController.cpp
     include/TaskListModel.h src/TaskListModel.cpp
     include/TaskFilterProxyModel.h src/TaskFilterProxyModel.cpp

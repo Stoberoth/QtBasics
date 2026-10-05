@@ -60,3 +60,21 @@ void TaskFilterProxyModel::removeTask(int proxyRow)
     QModelIndex sourceIndex = mapToSource(this->index(proxyRow, 0));
     static_cast<TaskListModel*>(sourceModel())->removeTask(sourceIndex.row());
 }
+
+void TaskFilterProxyModel::moveTask(int proxyRow, int proxyRowDest)
+{
+    if(m_filterMode != FilterMode::All)
+    {
+        return;
+    }
+    QModelIndex sourceIndex = mapToSource(this->index(proxyRow, 0));
+    QModelIndex sourceIndex_1 = mapToSource(this->index(proxyRowDest, 0));
+    if(sourceIndex.isValid() && sourceIndex_1.isValid()){
+        static_cast<TaskListModel*>(sourceModel())->moveTask(sourceIndex.row(), sourceIndex_1.row());
+    }
+}
+
+void TaskFilterProxyModel::importFromFile(const QString &path)
+{
+    static_cast<TaskListModel*>(sourceModel())->importFromFile(path);
+}
