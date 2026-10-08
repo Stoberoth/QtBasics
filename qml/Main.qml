@@ -69,6 +69,11 @@ Window
                     newTaskField.text = ""
                 }
             }
+            Button
+            {
+                text:"Post Task"
+                onClicked: taskModel.postTask(newTaskField.text)
+            }
         }
         Row
         {
@@ -101,6 +106,25 @@ Window
                 ButtonGroup.group: filterGroup
                 onClicked: proxyModel.filterMode = TaskFilterProxyModel.Completed
             }
+        }
+        Row{
+            Button
+            {
+                text:"Import big file"
+                onClicked: taskModel.importButton()
+            }
+            Button
+            {
+                text:"Fetch from network"
+                onClicked: taskModel.fetchFromNetwork()
+            }
+
+        }
+        ProgressBar
+        {
+            from:0
+            to: 100
+            value: taskModel.importProgress
         }
         ListView
         {
@@ -191,15 +215,5 @@ Window
         text:taskModel.importMessage;
         color: "#f38ba8"
     }
-    Button
-    {
-        text:"Import big file"
-        onClicked: taskModel.importButton()
-    }
-    ProgressBar
-    {
-        from:0
-        to: 100
-        value: taskModel.importProgress
-    }
+
 }

@@ -14,6 +14,7 @@
 #include "ImportWorker.h"
 
 #include <QFutureWatcher>
+#include <QNetworkAccessManager>
 
 struct Task
 {
@@ -68,6 +69,9 @@ public:
     Q_INVOKABLE void importFromFile(const QString &path);
     Q_INVOKABLE void importButton();
 
+    Q_INVOKABLE void fetchFromNetwork();
+    Q_INVOKABLE void postTask(const QString &title);
+
     QString importMessage();
     void setImportMessage(const QString &message);
 
@@ -89,6 +93,8 @@ private:
 
     ImportWorker *m_worker;
     QThread *m_thread;
+
+    QNetworkAccessManager *m_network;
 
     QFutureWatcher<QJsonArray> m_watcher;
 

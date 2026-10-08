@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml Concurrent)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml Concurrent Network)
 
 # macro QT6 qui remplace les automoc ....
 qt_standard_project_setup()
@@ -29,4 +29,4 @@ qt_add_qml_module(appQt_basics
 
 
 target_link_libraries(appQt_basics PRIVATE Qt6::Core
-                      Qt6::Quick Qt6::Qml Qt6::Concurrent)
+                      Qt6::Quick Qt6::Qml Qt6::Concurrent Qt6::Network)

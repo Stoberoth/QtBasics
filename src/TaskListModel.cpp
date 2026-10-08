@@ -5,13 +5,15 @@
 #include <QThread>
 #include <QFuture>
 #include <QtConcurrent/QtConcurrent>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 
 TaskListModel::TaskListModel(QObject *parent) : QAbstractListModel(parent)
 {
     m_worker = new ImportWorker();
     m_thread = new QThread(this);
     m_worker->moveToThread(m_thread);
-
+    m_network = new QNetworkAccessManager(this);
 
     connect(this, &TaskListModel::importedRequested, m_worker, &ImportWorker::importFile);
     connect(m_worker, &ImportWorker::imported, this, &TaskListModel::applyImport);
@@ -159,6 +161,100 @@ void TaskListModel::moveTask(int from, int to)
     saveToFile();
 
 
+}
+
+void TaskListModel::fetchFromNetwork()
+{
+    if(m_workerBusy == true)
+    {
+        setImportMessage("Déjà en cours d'import");
+        return;
+    }
+    m_workerBusy=true;
+    QNetworkRequest request(QUrl("https://jsonplaceholder.typicode.com/todos?_limit=20"));
+    request.setTransferTimeout(5000);
+    QNetworkReply *reply = m_network->get(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]
+        {
+            if(reply->error() != QNetworkReply::NoError)
+            {
+                m_workerBusy = false;
+                reply->deleteLater();
+                setImportMessage(reply->errorString());
+                return;
+            }
+            if(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200)
+            {
+                m_workerBusy = false;
+                reply->deleteLater();
+                setImportMessage(QString("Status Code not allowed"));
+                return;
+            }
+            QJsonDocument document = QJsonDocument::fromJson(reply->readAll());
+            if(!document.isArray())
+            {
+                m_workerBusy = false;
+                reply->deleteLater();
+                setImportMessage("Ce JSon n'est pas un array");
+                return;
+            }
+            QJsonArray array = document.array();
+            applyImport(array);
+            reply->deleteLater();
+            setImportMessage(QString("All Green"));
+        });
+}
+
+void TaskListModel::postTask(const QString &title)
+{
+    if(title.trimmed().isEmpty())
+    {
+        setImportMessage("Titre vide");
+        return;
+    }
+    if(m_workerBusy)
+    {
+        setImportMessage("Déjà au boulot");
+        return;
+    }
+    m_workerBusy = true;
+    QJsonObject body;
+    body["title"] = title.trimmed();
+    body["completed"] = false;
+    body["userId"] = 1;
+
+    QNetworkRequest request(QUrl("https://jsonplaceholder.typicode.com/todos"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setTransferTimeout(5000);
+    QNetworkReply *reply = m_network->post(request, QJsonDocument(body).toJson());
+    connect(reply, &QNetworkReply::finished, this, [this, reply]
+        {
+            if(reply->error() != QNetworkReply::NoError)
+            {
+                m_workerBusy = false;
+                reply->deleteLater();
+                setImportMessage(reply->errorString());
+                return;
+            }
+            if(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 201)
+            {
+                m_workerBusy = false;
+                reply->deleteLater();
+                setImportMessage("Post non résolu pas de création");
+                return;
+            }
+            QJsonDocument document = QJsonDocument::fromJson(reply->readAll());
+            if(!document.isObject())
+            {
+                m_workerBusy = false;
+                reply->deleteLater();
+                setImportMessage("Json reçu pas un objet");
+                return;
+            }
+            addTask(document.object().value("title").toString());
+            m_workerBusy = false;
+            reply->deleteLater();
+        });
 }
 
 void TaskListModel::importFromFile(const QString &path)
