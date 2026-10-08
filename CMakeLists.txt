@@ -6,13 +6,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml Concurrent)
 
 # macro QT6 qui remplace les automoc ....
 qt_standard_project_setup()
 
 # création de la cible executable
-qt_add_executable(appQt_basics include/ImportWorker.h src/ImportWorker.cpp src/main.cpp )
+qt_add_executable(appQt_basics include/ImportWorker.h
+                              src/ImportWorker.cpp src/main.cpp )
 
 target_include_directories(appQt_basics PRIVATE include)
 
@@ -27,4 +28,5 @@ qt_add_qml_module(appQt_basics
 )
 
 
-target_link_libraries(appQt_basics PRIVATE Qt6::Core Qt6::Quick Qt6::Qml)
+target_link_libraries(appQt_basics PRIVATE Qt6::Core
+                      Qt6::Quick Qt6::Qml Qt6::Concurrent)

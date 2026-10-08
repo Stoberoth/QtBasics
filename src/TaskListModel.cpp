@@ -3,7 +3,8 @@
 #include <QByteArray>
 #include <algorithm>
 #include <QThread>
-#include <iterator>
+#include <QFuture>
+#include <QtConcurrent/QtConcurrent>
 
 TaskListModel::TaskListModel(QObject *parent) : QAbstractListModel(parent)
 {
@@ -17,6 +18,15 @@ TaskListModel::TaskListModel(QObject *parent) : QAbstractListModel(parent)
     connect(m_worker, &ImportWorker::failed, this, &TaskListModel::onImportFailed);
     connect(this, &TaskListModel::importBigFile, m_worker, &ImportWorker::generateTasks);
     connect(m_worker, &ImportWorker::progress, this, &TaskListModel::setImportProgress);
+    connect(&m_watcher, &QFutureWatcher<QJsonArray>::finished, this, [this]{
+        if(m_watcher.isCanceled())
+        {
+            return;
+        }
+        setImportProgress(100);
+        applyImport(m_watcher.result());
+    });
+
     m_thread->start();
     loadFromFile();
     if(m_task.empty())
@@ -24,6 +34,8 @@ TaskListModel::TaskListModel(QObject *parent) : QAbstractListModel(parent)
 }
 TaskListModel::~TaskListModel()
 {
+    m_watcher.cancel();
+    m_watcher.waitForFinished();
     m_thread->quit();
     m_thread->wait();
     delete m_worker;
@@ -247,9 +259,36 @@ void TaskListModel::setImportProgress(int importProgress)
     emit importProgressChanged();
 }
 
+
+QJsonArray buildGeneratedTasks(int count)
+{
+    if(count <= 0)
+    {
+        return QJsonArray();
+    }
+
+    QJsonArray array;
+    for(int i = 0; i < count; ++i)
+    {
+        QJsonObject task;
+        task["title"] = QString("Task %1").arg(i+1);
+        task["completed"] = false;
+        array.append(task);
+        if(i % 1000 == 0)
+        {
+            QThread::msleep(3);
+        }
+    }
+    return array;
+}
+
 void TaskListModel::importButton()
 {
     if(m_workerBusy) return;
     m_workerBusy = true;
-    emit(importBigFile(50000));
+    // emit(importBigFile(50000));
+    QFuture<QJsonArray> future = QtConcurrent::run([] {
+        return buildGeneratedTasks(50000);
+    });
+    m_watcher.setFuture(future);
 }

@@ -13,6 +13,8 @@
 
 #include "ImportWorker.h"
 
+#include <QFutureWatcher>
+
 struct Task
 {
     QString title;
@@ -87,6 +89,8 @@ private:
 
     ImportWorker *m_worker;
     QThread *m_thread;
+
+    QFutureWatcher<QJsonArray> m_watcher;
 
     QString getStorageFilePath() const;
     void saveToFile() const;
