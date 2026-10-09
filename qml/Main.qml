@@ -47,6 +47,11 @@ Window
             to: 100
             value: controller.progress
         }
+        HabitGauge
+        {
+            anchors.horizontalCenter: parent.horizontalCenter
+            progress: controller.progress
+        }
         Text
         {
             text: controller.progress + "%"

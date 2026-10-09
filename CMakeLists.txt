@@ -25,6 +25,7 @@ qt_add_qml_module(appQt_basics
     SOURCES include/DashboardController.h src/DashboardController.cpp
     include/TaskListModel.h src/TaskListModel.cpp
     include/TaskFilterProxyModel.h src/TaskFilterProxyModel.cpp
+    include/HabitGauge.h src/HabitGauge.cpp
 )
 
 
