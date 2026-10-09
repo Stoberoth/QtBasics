@@ -7,14 +7,15 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
-#include <QStandardPaths>
-#include <QDir>
-#include <QFile>
-
 #include "ImportWorker.h"
 
 #include <QFutureWatcher>
 #include <QNetworkAccessManager>
+
+
+#include "TaskRepository.h"
+
+
 
 struct Task
 {
@@ -98,7 +99,8 @@ private:
 
     QFutureWatcher<QJsonArray> m_watcher;
 
-    QString getStorageFilePath() const;
+    TaskRepository m_repository = TaskRepository();
+
     void saveToFile() const;
     void loadFromFile();
 

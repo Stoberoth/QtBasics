@@ -26,6 +26,7 @@ qt_add_qml_module(appQt_basics
     include/TaskListModel.h src/TaskListModel.cpp
     include/TaskFilterProxyModel.h src/TaskFilterProxyModel.cpp
     include/HabitGauge.h src/HabitGauge.cpp
+    include/TaskRepository.h src/TaskRepository.cpp
 )
 
 target_link_libraries(appQt_basics PRIVATE Qt6::Core
@@ -34,6 +35,7 @@ target_link_libraries(appQt_basics PRIVATE Qt6::Core
 qt_add_executable(taskmodel_tests tests/test_TaskListModel.cpp
     include/TaskListModel.h src/TaskListModel.cpp
     include/ImportWorker.h src/ImportWorker.cpp
+    include/TaskRepository.h src/TaskRepository.cpp
 )
 
 target_include_directories(taskmodel_tests PRIVATE include)

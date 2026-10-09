@@ -89,7 +89,6 @@ QHash<int, QByteArray> TaskListModel::roleNames() const
 
 void TaskListModel::addTask(const QString &title)
 {
-    if(title.trimmed().isEmpty()) return;
     int newRow = static_cast<int>(m_task.size());
 
     // on avertis Qt qu'on va insérer une ligne dans le model
@@ -125,20 +124,6 @@ void TaskListModel::toggleTask(int index)
     saveToFile();
 }
 
-QString TaskListModel::getStorageFilePath() const
-{
-    // On cherche le dossier pour enregistrer les données
-    QString dirPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-    // Si le dossier n'existe pas on le créer
-    QDir dir(dirPath);
-    if(!dir.exists())
-    {
-        // avec le nom de ce projet
-        dir.mkpath(".");
-    }
-    // on retourne le chemin complet du fichier que l'on créer ici
-    return dir.filePath("task.json");
-}
 
 void TaskListModel::moveTask(int from, int to)
 {
@@ -283,41 +268,23 @@ void TaskListModel::saveToFile() const
     {
         taskJsonArray.append(t.toJson());
     }
-    QJsonDocument taskJsonDocument(taskJsonArray);
-    QFile jsonFile(getStorageFilePath());
-    if(!jsonFile.open(QIODevice::WriteOnly|QIODevice::Text))
-    {
-        return;
-    }
-    jsonFile.write(taskJsonDocument.toJson());
-    jsonFile.close();
+    m_repository.saveToFile(taskJsonArray);
 }
 
 void TaskListModel::loadFromFile()
 {
-    QString filePath = getStorageFilePath();
-    if(!QFile::exists(filePath))
+    QJsonArray taskJsonArray = m_repository.loadFromFile();
+    if(taskJsonArray.isEmpty())
     {
         return;
     }
-    QFile taskJsonFile(filePath);
-    if(!taskJsonFile.open(QIODevice::ReadOnly|QIODevice::Text))
+    beginResetModel();
+    m_task.clear();
+    for(int i = 0; i < taskJsonArray.size(); i++)
     {
-        return;
+        m_task.push_back(Task::fromJson(taskJsonArray.at(i).toObject()));
     }
-    QByteArray data = taskJsonFile.readAll();
-    QJsonDocument taskJsonDocument = QJsonDocument::fromJson(data);
-    if(taskJsonDocument.isArray())
-    {
-        beginResetModel();
-        m_task.clear();
-        QJsonArray array = taskJsonDocument.array();
-        for(int i = 0; i < array.size(); i++)
-        {
-            m_task.push_back(Task::fromJson(array.at(i).toObject()));
-        }
-        endResetModel();
-    }
+    endResetModel();
 }
 
 void TaskListModel::applyImport(const QJsonArray &tasks)

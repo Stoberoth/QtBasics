@@ -79,3 +79,30 @@ void DashboardController::updateProgress()
     }
     setProgress((task_completed * 100 / m_taskModel->rowCount()));
 }
+
+bool DashboardController::addRequested(const QString &title)
+{
+    if(title.trimmed().isEmpty())
+    {
+        setMessage("Titre non valide");
+        return false;
+    }
+    setMessage("");
+    if(m_taskModel == nullptr)
+    {
+        return false;
+    }
+    m_taskModel->addTask(title);
+    return true;
+}
+
+QString DashboardController::message() const
+{
+    return m_message;
+}
+
+void DashboardController::setMessage(const QString &message)
+{
+    m_message = message;
+    emit messageChanged();
+}

@@ -11,9 +11,6 @@ Window {
     title: "Task & Habit Tracker"
     color: "#1e1e2e"
 
-    required property int index
-    required property var model
-
     TaskListModel {
         id: taskModel
     }
@@ -62,14 +59,20 @@ Window {
             Button {
                 text: "Ajouter"
                 onClicked: {
-                    taskModel.addTask(newTaskField.text);
-                    newTaskField.text = "";
+                    if(controller.addRequested(newTaskField.text))
+                        newTaskField.text = "";
                 }
             }
             Button {
                 text: "Post Task"
                 onClicked: taskModel.postTask(newTaskField.text)
             }
+
+        }
+        Text
+        {
+            text: controller.message
+            color: "#a6adc8"
         }
         Row {
             spacing: 8
