@@ -1,5 +1,6 @@
 .rules
 .zed
+.qmlls.ini
 build
 ROADMAP.md
 notes

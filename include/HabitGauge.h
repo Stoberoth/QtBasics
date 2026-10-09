@@ -2,6 +2,7 @@
 
 #include <QQuickPaintedItem>
 #include <QPainter>
+#include <QMouseEvent>
 
 class HabitGauge : public QQuickPaintedItem
 {
@@ -15,6 +16,7 @@ public:
     qreal progress();
     void setProgress(qreal progress);
     void paint(QPainter *painter) override;
+    void mousePressEvent(QMouseEvent *event) override;
 signals:
     void progressChanged();
 

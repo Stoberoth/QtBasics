@@ -1,10 +1,14 @@
 #include "HabitGauge.h"
 #include <QPen>
+#include <cmath>
+#include <QDebug>
+#include <cstdlib>
 
 HabitGauge::HabitGauge(QQuickItem *parent) : QQuickPaintedItem(parent)
 {
     setImplicitHeight(80);
     setImplicitWidth(80);
+    setAcceptedMouseButtons(Qt::LeftButton);
 }
 
 qreal HabitGauge::progress()
@@ -36,7 +40,7 @@ void HabitGauge::paint(QPainter *painter)
     painter->setRenderHint(QPainter::Antialiasing, true);
 
     QRectF rect = boundingRect();
-    rect.adjust(penBrushSize / 2, penBrushSize / 2, -penBrushSize / 2, -penBrushSize / 2);
+    rect.adjust(penBrushSize / 2.0, penBrushSize / 2.0, -penBrushSize / 2.0, -penBrushSize / 2.0);
 
     const int start = 90 * 16;
     const int full = -360 * 16;
@@ -44,4 +48,26 @@ void HabitGauge::paint(QPainter *painter)
     painter->drawArc(rect, start, full);
     painter->setPen(penCompleted);
     painter->drawArc(rect, start, span);
+}
+
+void HabitGauge::mousePressEvent(QMouseEvent *event)
+{
+    QPoint pos = event->pos();
+    qreal dx = pos.x() - width() /2;
+    qreal dy = pos.y() - height() / 2;
+    qreal distFromCenter = std::hypot(dx, dy);
+    if(abs(distFromCenter - ((width() / 2) - 4)) > 8)
+    {
+        event->ignore();
+        return;
+    }
+    event->accept();
+    qreal degrees = std::atan2(dy, dx) * 180.0 / M_PI;
+
+    degrees += 90;
+    if(degrees < 0)
+    {
+        degrees += 360;
+    }
+    setProgress(degrees / 360 * 100.0);
 }

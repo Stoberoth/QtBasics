@@ -1,97 +1,85 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import Qt_basics
 
-Window
-{
-    width:640
+Window {
+    width: 640
     height: 480
-    visible:true
+    visible: true
     title: "Task & Habit Tracker"
     color: "#1e1e2e"
 
-    TaskListModel
-    {
+    required property int index
+    required property var model
+
+    TaskListModel {
         id: taskModel
     }
-    TaskFilterProxyModel
-    {
+    TaskFilterProxyModel {
         id: proxyModel
         sourceModel: taskModel
     }
-    DashboardController
-    {
+    DashboardController {
         id: controller
         taskModel: taskModel
     }
 
-    Column
-    {
+    Column {
         anchors.centerIn: parent
         spacing: 16
 
-        Text
-        {
+        Text {
             text: controller.title
             color: "#cdd6f4"
         }
-        TextField
-        {
+        TextField {
             anchors.horizontalCenter: parent.horizontalCenter
             text: controller.title
             onTextChanged: controller.title = text
         }
-        ProgressBar
-        {
+        ProgressBar {
             from: 0
             to: 100
             value: controller.progress
         }
-        HabitGauge
-        {
+        HabitGauge {
             anchors.horizontalCenter: parent.horizontalCenter
-            progress: controller.progress
+            //progress: controller.progress
         }
-        Text
-        {
+        Text {
             text: controller.progress + "%"
             color: "#a6adc8"
         }
 
-        Row
-        {
+        Row {
             spacing: 8
-            TextField
-            {
+            TextField {
                 id: newTaskField
-                placeholderText:"Nouvelle tache"
+                placeholderText: "Nouvelle tache"
             }
-            Button
-            {
-                text:"Ajouter"
+            Button {
+                text: "Ajouter"
                 onClicked: {
-                    taskModel.addTask(newTaskField.text)
-                    newTaskField.text = ""
+                    taskModel.addTask(newTaskField.text);
+                    newTaskField.text = "";
                 }
             }
-            Button
-            {
-                text:"Post Task"
+            Button {
+                text: "Post Task"
                 onClicked: taskModel.postTask(newTaskField.text)
             }
         }
-        Row
-        {
+        Row {
             spacing: 8
             anchors.horizontalCenter: parent.horizontalCenter
 
-            ButtonGroup
-            {
+            ButtonGroup {
                 id: filterGroup
             }
-            Button
-            {
-                text:"Toutes"
+            Button {
+                text: "Toutes"
                 checkable: true
                 checked: proxyModel.filterMode === TaskFilterProxyModel.All
                 ButtonGroup.group: filterGroup
@@ -112,79 +100,65 @@ Window
                 onClicked: proxyModel.filterMode = TaskFilterProxyModel.Completed
             }
         }
-        Row{
-            Button
-            {
-                text:"Import big file"
+        Row {
+            Button {
+                text: "Import big file"
                 onClicked: taskModel.importButton()
             }
-            Button
-            {
-                text:"Fetch from network"
+            Button {
+                text: "Fetch from network"
                 onClicked: taskModel.fetchFromNetwork()
             }
-
         }
-        ProgressBar
-        {
-            from:0
+        ProgressBar {
+            from: 0
             to: 100
             value: taskModel.importProgress
         }
-        ListView
-        {
+        ListView {
             id: taskListView
             model: proxyModel.filterMode === TaskFilterProxyModel.All ? taskModel : proxyModel
 
             width: parent.width
             height: 200
             clip: true
-            delegate: TaskDelegate
-            {
+            delegate: TaskDelegate {
                 listView: taskListView
                 reorderEnabled: proxyModel.filterMode === TaskFilterProxyModel.All
                 width: taskListView.width
-                onTaskToggled : proxyModel.toggleTask(model.index)
-                onTaskRemoved : proxyModel.removeTask(model.index)
-                onTaskReordered: (toIndex) => proxyModel.moveTask(index, toIndex)
+                onTaskToggled: proxyModel.toggleTask(model.index)
+                onTaskRemoved: proxyModel.removeTask(model.index)
+                onTaskReordered: toIndex => proxyModel.moveTask(index, toIndex)
             }
-            add: Transition
-            {
-                NumberAnimation
-                {
+            add: Transition {
+                NumberAnimation {
                     properties: "x"
                     from: -taskListView.width
                     to: 0
                     duration: 300
                     easing.type: Easing.OutQuad
                 }
-                NumberAnimation
-                {
+                NumberAnimation {
                     properties: "opacity"
                     from: 0
                     to: 1
                     duration: 300
                 }
             }
-            remove: Transition
-            {
-                NumberAnimation
-                {
+            remove: Transition {
+                NumberAnimation {
                     properties: "opacity"
                     to: 0
                     duration: 350
                 }
-                NumberAnimation
-                {
+                NumberAnimation {
                     properties: "scale"
                     to: 0.5
                     duration: 250
                 }
             }
-            displaced: Transition
-            {
-                NumberAnimation
-                {
+            displaced: Transition {
+                NumberAnimation {
                     properties: "y"
                     duration: 250
                     easing.type: Easing.OutCubic
@@ -206,19 +180,16 @@ Window
             }
         }
     }
-    DropArea
-    {
+    DropArea {
         anchors.fill: parent
-        onDropped: (drop) => {
-            if(drop.hasUrls)
-                taskModel.importFromFile(drop.urls[0])
-            drop.acceptProposedAction()
+        onDropped: drop => {
+            if (drop.hasUrls)
+                taskModel.importFromFile(drop.urls[0]);
+            drop.acceptProposedAction();
         }
     }
-    Text
-    {
-        text:taskModel.importMessage;
+    Text {
+        text: taskModel.importMessage
         color: "#f38ba8"
     }
-
 }
